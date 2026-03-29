@@ -1,0 +1,8 @@
+=== RAPORT SCANARE: localhost (127.0.0.1) ===
+Data si ora: 29-03-2026 18:33:38
+--------------------------------------------------
+PORT: 135    | SERVICIU: EPMAP        | STARE: DESCHIS
+PORT: 445    | SERVICIU: MICROSOFT-DS | STARE: DESCHIS
+--------------------------------------------------
+Total porturi deschise: 2
+Durata scanarii: 5.59 secunde

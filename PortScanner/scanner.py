@@ -1,10 +1,10 @@
 """
-SimpleScanner - Scanner de Porturi de Retea
-============================================
+SimpleScanner v2.0 - Scanner de Porturi de Retea
+================================================
 Descriere:
     Instrument de scanare TCP care verifica porturile 1-1024 ale unui host
     (IP sau domeniu), folosind executie paralela prin thread-uri pentru
-    performanta ridicata.
+    performanta ridicata. Identifica automat serviciile si exporta rezultatele.
 
 Dependente:
     Doar biblioteci din Standard Library Python (socket, sys, datetime,
@@ -18,6 +18,29 @@ import socket               # Biblioteca pentru comunicatii de retea (TCP/IP)
 import sys                  # Necesar pentru sys.exit() — iesire controlata din program
 from datetime import datetime       # Folosit pentru a masura durata scanarii
 import concurrent.futures   # Ofera ThreadPoolExecutor pentru executie paralela
+
+
+# --- Functia pentru identificarea serviciilor ---
+def obtine_nume_serviciu(port):
+    """
+    Identifica numele serviciului standard asociat unui port TCP.
+
+    Mecanism:
+        - Foloseste socket.getservbyport() pentru a interoga baza de date
+          locala a sistemului de operare (ex: fisierul /etc/services pe Linux).
+        - Daca portul este cunoscut (ex: 80), returneaza numele (ex: 'http').
+        - Daca portul nu este in baza de date, arunca OSError si returnam 'necunoscut'.
+
+    Parametri:
+        port (int): Numarul portului gasit deschis.
+
+    Returneaza:
+        str: Numele serviciului (ex: 'ssh') sau 'necunoscut'.
+    """
+    try:
+        return socket.getservbyport(port, "tcp")
+    except OSError:
+        return "necunoscut"
 
 
 def scaneaza_port(ip, port):
@@ -48,7 +71,6 @@ def scaneaza_port(ip, port):
     scanner = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
     # Setam un timeout de 0.5 secunde.
-    # Fara timeout, thread-ul ar astepta indefinit un raspuns de la porturile
     # filtrate de firewall, blocand intreaga scanare.
     scanner.settimeout(0.5)
 
@@ -60,11 +82,8 @@ def scaneaza_port(ip, port):
         rezultat = scanner.connect_ex((ip, port))
 
         if rezultat == 0:
-            # Cod 0 inseamna ca serverul a acceptat conexiunea TCP —
             # portul este DESCHIS si un serviciu asculta pe el.
             return port
-
-        # Orice alt cod (ex: 111 = Connection refused, 110 = Timeout)
         # inseamna ca portul este inchis sau blocat de firewall.
         return None
 
@@ -88,8 +107,6 @@ def afiseaza_banner():
     Rolul sau este sa identifice tool-ul si sa ofere o experienta mai
     profesionala utilizatorului.
     """
-    # Logo-ul este un sir multilinie (triple quotes).
-    # Textul a fost generat cu un font ASCII art de tip "slant".
     print("""
     ================================================
       ____  _                 _   ____                  
@@ -141,64 +158,86 @@ if __name__ == "__main__":
 
     # Pasul 5: Definim gama de porturi de scanat.
     # range(1, 1025) genereaza porturile 1 pana la 1024 (inclusiv).
-    # Acestea sunt porturile "well-known" standardizate de IANA (ex: 80=HTTP,
-    # 443=HTTPS, 22=SSH, 21=FTP, 25=SMTP etc.).
+    # Acestea sunt porturile "well-known" standardizate de IANA.
     porturi_de_scanat = range(1, 1025)
 
     # Contor pentru numarul total de porturi deschise gasite
     porturi_deschise = 0
+    
+    # Lista pentru a stoca rezultatele in vederea exportului ---
+    lista_rezultate = [] 
 
     # Pasul 6: Lansam scanarea paralela cu ThreadPoolExecutor.
     # Folosim try/except exterior pentru a intercepta Ctrl+C (KeyboardInterrupt).
     try:
         # ThreadPoolExecutor creeaza un "pool" de thread-uri reutilizabile.
         # max_workers=100 inseamna ca vor rula simultan maxim 100 de thread-uri.
-        # Cuvantul cheie `with` garanteaza ca toate thread-urile se termina
-        # inainte de a continua (join automat la iesirea din bloc).
         with concurrent.futures.ThreadPoolExecutor(max_workers=100) as executor:
 
-            # Trimitem toate task-urile in pool dintr-o data (non-blocking).
-            # executor.submit() planifica executia scaneaza_port(ip, port) pe
-            # un thread disponibil si returneaza un obiect Future (promisiune
-            # de rezultat viitor). Cream lista de Future-uri pentru toti portii.
+            # executor.submit() planifica executia scaneaza_port(ip, port)
             task_uri = [
                 executor.submit(scaneaza_port, ip_tinta, port)
                 for port in porturi_de_scanat
             ]
 
-            # as_completed() este un iterator care "livreaza" Future-urile
-            # pe masura ce thread-urile le finalizeaza — NU in ordinea initiala.
-            # Acest lucru ne permite sa afisam porturile deschise IMEDIAT ce
-            # sunt descoperite, fara sa asteptam terminarea tuturor scanarilor.
+            # as_completed() livreaza Future-urile pe masura ce sunt gata
             for task in concurrent.futures.as_completed(task_uri):
 
-                # task.result() extrage valoarea returnata de scaneaza_port():
-                # - un numar intreg daca portul e deschis
-                # - None daca portul e inchis sau a aparut o eroare
                 port_gasit = task.result()
 
                 if port_gasit is not None:
-                    # Am gasit un port deschis — il afisam imediat si actualizam contorul
-                    print(f"[+] Portul {port_gasit} este DESCHIS")
+                    # --- NOU: Aflam serviciul si salvam datele ---
+                    nume_serv = obtine_nume_serviciu(port_gasit)
+                    
+                    # Am gasit un port deschis — il afisam imediat
+                    print(f"[+] Portul {port_gasit} ({nume_serv.upper()}) este DESCHIS")
+                    
+                    # Actualizam contorul si adaugam tuplul in lista noastra de rezultate
                     porturi_deschise += 1
+                    lista_rezultate.append((port_gasit, nume_serv))
 
     except KeyboardInterrupt:
         # Utilizatorul a apasat Ctrl+C in timpul scanarii.
-        # Afisam un mesaj politicos si iesim curat din program.
-        # ThreadPoolExecutor se va inchide automat (context manager).
-        print("\n[!] Scanare intrerupta de utilizator (Ctrl+C).")
-        sys.exit()
+        # Nu mai oprim programul brusc, ci lasam executia sa continue spre Pasul 7 si 8
+        # pentru a genera fisierul cu porturile gasite pana in acest moment.
+        print("\n[!] Scanare intrerupta de utilizator (Ctrl+C). Se genereaza raportul partial...")
 
-    # Pasul 7: Calculam si afisam raportul final
+    # Pasul 7: Calculam si afisam raportul final in consola
     timp_sfarsit = datetime.now()
-
-    # Scadem timpul de start din timpul de sfarsit pentru a obtine un obiect
-    # timedelta, din care extragem durata in secunde (cu zecimale).
     durata_totala = timp_sfarsit - timp_start
 
     print("-" * 50)
     print(f"[*] Scanare finalizata!")
     print(f"[*] Total porturi deschise gasite: {porturi_deschise}")
-    # :.2f formateaza numarul float la exact 2 zecimale (ex: 6.34)
     print(f"[*] Timp total de executie: {durata_totala.total_seconds():.2f} secunde")
+    
+    # Pasul 8: Exportul datelor in fisier text ---
+    # Verificam daca am gasit macar un port (ca sa nu cream fisiere goale inutile)
+    if porturi_deschise > 0:
+        nume_fisier = f"scanare_{ip_tinta}.txt"
+        
+        # Sortam lista crescator dupa numarul portului (indexul 0 din tuplul salvat)
+        # deoarece as_completed() le returneaza intr-o ordine aleatorie
+        lista_rezultate.sort(key=lambda x: x[0])
+        
+        try:
+            # Deschidem fisierul in modul 'w' (write - scriere). Daca nu exista, il creeaza.
+            with open(nume_fisier, "w") as fisier:
+                fisier.write(f"=== RAPORT SCANARE: {domeniu_tinta} ({ip_tinta}) ===\n")
+                fisier.write(f"Data si ora: {timp_start.strftime('%d-%m-%Y %H:%M:%S')}\n")
+                fisier.write("-" * 50 + "\n")
+                
+                # Iteram prin lista sortata si scriem fiecare linie
+                # Folosim :<6 si :<12 pentru a asigura o aliniere tip tabel (padding)
+                for port, serviciu in lista_rezultate:
+                    fisier.write(f"PORT: {port:<6} | SERVICIU: {serviciu.upper():<12} | STARE: DESCHIS\n")
+                
+                fisier.write("-" * 50 + "\n")
+                fisier.write(f"Total porturi deschise: {porturi_deschise}\n")
+                fisier.write(f"Durata scanarii: {durata_totala.total_seconds():.2f} secunde\n")
+                
+            print(f"[*] RAPORT SALVAT: Rezultatele au fost exportate in '{nume_fisier}'")
+        except Exception as eroare:
+            print(f"[!] Eroare la salvarea fisierului: {eroare}")
+
     print("=" * 48)

@@ -1,0 +1,9 @@
+=== RAPORT SCANARE: 8.8.8.8 (8.8.8.8) ===
+Data si ora: 29-03-2026 18:40:42
+--------------------------------------------------
+PORT: 53     | SERVICIU: DOMAIN       | STARE: DESCHIS
+PORT: 443    | SERVICIU: HTTPS        | STARE: DESCHIS
+PORT: 853    | SERVICIU: NECUNOSCUT   | STARE: DESCHIS
+--------------------------------------------------
+Total porturi deschise: 3
+Durata scanarii: 50.72 secunde

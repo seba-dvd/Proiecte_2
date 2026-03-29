@@ -1,0 +1,8 @@
+=== RAPORT SCANARE: youtube.com (172.217.17.78) ===
+Data si ora: 29-03-2026 18:31:31
+--------------------------------------------------
+PORT: 80     | SERVICIU: HTTP         | STARE: DESCHIS
+PORT: 443    | SERVICIU: HTTPS        | STARE: DESCHIS
+--------------------------------------------------
+Total porturi deschise: 2
+Durata scanarii: 5.63 secunde

@@ -1,0 +1,8 @@
+=== RAPORT SCANARE: google.com (192.178.25.174) ===
+Data si ora: 29-03-2026 18:30:01
+--------------------------------------------------
+PORT: 80     | SERVICIU: HTTP         | STARE: DESCHIS
+PORT: 443    | SERVICIU: HTTPS        | STARE: DESCHIS
+--------------------------------------------------
+Total porturi deschise: 2
+Durata scanarii: 5.61 secunde

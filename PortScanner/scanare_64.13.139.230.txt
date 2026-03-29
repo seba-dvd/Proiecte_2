@@ -1,0 +1,13 @@
+=== RAPORT SCANARE: telehack.com (64.13.139.230) ===
+Data si ora: 29-03-2026 18:33:16
+--------------------------------------------------
+PORT: 17     | SERVICIU: QOTD         | STARE: DESCHIS
+PORT: 21     | SERVICIU: FTP          | STARE: DESCHIS
+PORT: 70     | SERVICIU: GOPHER       | STARE: DESCHIS
+PORT: 79     | SERVICIU: FINGER       | STARE: DESCHIS
+PORT: 80     | SERVICIU: HTTP         | STARE: DESCHIS
+PORT: 443    | SERVICIU: HTTPS        | STARE: DESCHIS
+PORT: 513    | SERVICIU: LOGIN        | STARE: DESCHIS
+--------------------------------------------------
+Total porturi deschise: 7
+Durata scanarii: 5.61 secunde

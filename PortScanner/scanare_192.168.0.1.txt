@@ -1,0 +1,11 @@
+=== RAPORT SCANARE: 192.168.0.1 (192.168.0.1) ===
+Data si ora: 29-03-2026 18:34:41
+--------------------------------------------------
+PORT: 21     | SERVICIU: FTP          | STARE: DESCHIS
+PORT: 23     | SERVICIU: TELNET       | STARE: DESCHIS
+PORT: 80     | SERVICIU: HTTP         | STARE: DESCHIS
+PORT: 139    | SERVICIU: NETBIOS-SSN  | STARE: DESCHIS
+PORT: 445    | SERVICIU: MICROSOFT-DS | STARE: DESCHIS
+--------------------------------------------------
+Total porturi deschise: 5
+Durata scanarii: 5.58 secunde

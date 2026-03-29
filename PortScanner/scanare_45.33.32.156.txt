@@ -1,0 +1,8 @@
+=== RAPORT SCANARE: scanme.nmap.org (45.33.32.156) ===
+Data si ora: 29-03-2026 18:49:46
+--------------------------------------------------
+PORT: 22     | SERVICIU: SSH          | STARE: DESCHIS
+PORT: 80     | SERVICIU: HTTP         | STARE: DESCHIS
+--------------------------------------------------
+Total porturi deschise: 2
+Durata scanarii: 5.62 secunde
